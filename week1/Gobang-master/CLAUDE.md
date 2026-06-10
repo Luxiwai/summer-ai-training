@@ -31,7 +31,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 python run.py
 
 # 语法检查（全部文件）
-python -m py_compile constants.py && python -m py_compile game.py && python -m py_compile renderer.py && python -m py_compile run.py
+python -m py_compile constants.py && python -m py_compile game.py && python -m py_compile renderer.py && python -m py_compile run.py && python -m py_compile test_game.py
 ```
 
 ---
@@ -62,6 +62,7 @@ Gobang-master/
   renderer.py     ← 视图层：PygameRenderer 类，所有绘制逻辑
   game.py         ← 模型层：Game 类，状态机 + 业务逻辑（可独立测试）
   constants.py    ← 常量层：几何参数、颜色、棋子标记、玩家编码
+  test_game.py    ← 单元测试：66 项，unittest 框架，覆盖全部核心逻辑
 ```
 
 
