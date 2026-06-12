@@ -30,15 +30,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # 运行游戏
 python run.py
 
-# 语法检查（全部文件）
-python -m py_compile constants.py && python -m py_compile game.py && python -m py_compile renderer.py && python -m py_compile run.py && python -m py_compile test_game.py
+# 语法检查（全部 py 文件 — Git Bash 环境）
+for f in *.py; do python -m py_compile "$f" && echo "OK: $f"; done
 ```
 
 ---
 
 ## 4. 测试方式
 
-使用 Python 标准库 `unittest` 框架，测试文件为 [test_game.py](test_game.py)，共 **66 项测试**、12 个测试类。
+使用 Python 标准库 `unittest` 框架，测试文件为 [test_game.py](test_game.py)，共 **66 项测试**、12 个测试类。也可使用 pytest。
 
 ```bash
 # 运行全部测试（详细输出）
@@ -52,21 +52,25 @@ python -m unittest test_game.TestCheckWin -v
 
 # 运行单个测试方法
 python -m unittest test_game.TestCheckWin.test_horizontal_middle -v
+
+# 或用 pytest（需 pip install pytest）
+python -m pytest test_game.py -v
 ```
 
 ## 5. 项目结构
 
 ```
 Gobang-master/
-  run.py          ← 入口 + 控制层：pygame 初始化、事件循环编排
-  renderer.py     ← 视图层：PygameRenderer 类，所有绘制逻辑
-  game.py         ← 模型层：Game 类，状态机 + 业务逻辑（可独立测试）
-  constants.py    ← 常量层：几何参数、颜色、棋子标记、玩家编码
-  test_game.py    ← 单元测试：66 项，unittest 框架，覆盖全部核心逻辑
+  run.py               ← 入口 + 控制层：pygame 初始化、事件循环编排
+  renderer.py          ← 视图层：PygameRenderer 类，所有绘制逻辑
+  game.py              ← 模型层：Game 类，状态机 + 业务逻辑（可独立测试）
+  constants.py         ← 常量层：几何参数、颜色、棋子标记、玩家编码
+  test_game.py         ← 单元测试：66 项，unittest 框架，覆盖全部核心逻辑
+  claude-cheatsheet.md ← 面向人类的 Claude Code 速查表（提示词模板、窍门）
 ```
 
 
-### 各层职责
+## 6. 各层职责
 
 **constants.py** — 单一真相源
 - 棋盘几何：`BOARD_SIZE`、`CELL_SIZE`、`MARGIN_X/Y`
@@ -81,12 +85,14 @@ Gobang-master/
 - 核心方法：`place_piece()`、`check_win()`、`is_draw()`、`switch_player()`、`reset()`
 - 消息方法：`get_turn_message()`、`get_winner_message()`、`get_draw_message()`
 - **判胜算法**：沿 4 条轴线（水平/垂直/两对角线）双向累计连续同色棋子，≥5 判胜
+- `check_win()` 直接读取棋盘状态（不依赖 `move_count`），因此即使手动摆放棋盘也能正确判胜（便于测试）；调用后会修改 `self.finished` 和 `self.winner` 作为副作用，`run.py` 依赖此行为
 - **坐标约定**：`board[row][col]` — `row` 行号 0-9（显示 A-J），`col` 列号 0-9
 
 **renderer.py** — 纯视图，只读 Game 状态
 - `PygameRenderer` 类在 `__init__` 预创建 4 个 Font 对象（避免每帧重复分配）
 - 公开方法：`draw_board()`、`draw_status()`、`draw_game_over()`、`get_cell_from_pos()`
 - 内部方法：`_draw_grid()`、`_draw_labels()`、`_draw_pieces()`
+- `get_cell_from_pos()` 为 **静态方法**（`@staticmethod`），无需 pygame 窗口即可测试
 - 像素坐标转换：`get_cell_from_pos()` 中 `row = (mouse_y - MARGIN_Y) // CELL_SIZE`
 - 棋子绘制：实心圆 + 1px 外描边
 
